@@ -870,3 +870,5 @@ app.listen(PORT, '0.0.0.0', () => {
     inicializarPlanificador();
   }
 });
+
+module.exports = app;
