@@ -1,0 +1,142 @@
+================================================================================
+DOCUMENTACIÓN COMPLETA DEL PRODE MUNDIAL
+Arquitectura, Persistencia, Automatización y Guía de Despliegue (Vercel)
+================================================================================
+
+Este documento contiene toda la información técnica necesaria para comprender,
+mantener y volver a desplegar esta aplicación web de Prode en el futuro.
+
+--------------------------------------------------------------------------------
+1. DESCRIPCIÓN GENERAL Y PROPÓSITO
+--------------------------------------------------------------------------------
+Este proyecto es una aplicación web completa para jugar al Prode del Mundial
+2026 en grupo. Los usuarios pueden registrarse, seleccionar su emoji de avatar,
+guardar predicciones para los partidos de la Copa del Mundo, predecir el podio 
+(Top 3) y competir en una tabla de posiciones global en tiempo real.
+
+--------------------------------------------------------------------------------
+2. ARQUITECTURA DEL SISTEMA
+--------------------------------------------------------------------------------
+El proyecto sigue una arquitectura monolítica clásica y ligera:
+
+A. FRONTEND (Cliente) - Carpeta /public
+   - index.html: Estructura de la SPA (Single Page Application).
+   - index.css: Diseño visual premium (paleta moderna, responsivo y dinámico).
+   - app.js: Lógica del cliente que maneja el registro, login, renderizado de las 
+     fases del mundial (grupos y llaves de eliminación directa), envío de 
+     predicciones y carga de la tabla de posiciones interactiva.
+   
+B. BACKEND (Servidor) - Carpeta /src
+   - server.js: Servidor HTTP con Express. Expone las rutas de la API para el 
+     usuario, rutas de administración y endpoints para las tareas automáticas (crons).
+   - engine.js: El motor de cálculo del Prode. Evalúa las predicciones de los 
+     usuarios contra los resultados reales de los partidos y otorga los puntos:
+        * Acierto de Tendencia: 2 puntos si acierta ganador o empate.
+        * Goles Proporcionales por Selección: Goles Reales - Desvío Absoluto (mínimo 0 puntos por selección).
+        * Premio por Arco en Cero: 1 punto fijo si predice 0 goles y la selección hace 0 goles.
+        * Bonus por Pleno Total: +2 puntos extra por acertar el marcador exacto.
+        * Puntos extra del Top 3: 5 puntos por cada posición del podio que coincida exactamente (hasta 15 pts en total).
+   - db.js: Capa de persistencia (Base de Datos Dual).
+   - worldcupService.js: Cliente HTTP para realizar peticiones a la API de worldcup26.ir.
+   - worldcupScheduler.js: Lógica de automatización inteligente y consulta de resultados en tiempo real.
+
+--------------------------------------------------------------------------------
+3. PERSISTENCIA DE DATOS (La Base de Datos "Dual" basada en CSV)
+--------------------------------------------------------------------------------
+Para evitar costos y configuraciones complejas de servidores de bases de datos, 
+la aplicación utiliza archivos en formato CSV dentro de la carpeta /data:
+  - data/partidos.csv: Lista de partidos, fechas, y resultados reales.
+  - data/usuarios.csv: Lista de usuarios registrados (username, password hash y emoji).
+  - data/predicciones_partidos.csv: Pronósticos de partidos de cada usuario.
+  - data/predicciones_top3.csv: Pronóstico de podio final de cada usuario.
+  - data/resultado_top3.csv: Podio real definitivo ingresado por el admin.
+
+Dado que Vercel opera bajo una arquitectura Serverless (las funciones se apagan 
+cuando no hay tráfico y su sistema de archivos es temporal y de solo lectura),
+el archivo /src/db.js implementa un MODO DUAL:
+
+- MODO LOCAL (Desarrollo):
+  Si no se detecta la variable GITHUB_TOKEN en el entorno, el servidor lee y 
+  escribe los CSVs directamente en el disco duro local (en la carpeta /data).
+
+- MODO PRODUCCIÓN (Vercel):
+  Si la variable GITHUB_TOKEN está configurada, el servidor realiza peticiones 
+  HTTP a la API REST de GitHub para leer y escribir los archivos CSV directamente
+  en tu repositorio privado de GitHub en tiempo real. 
+  Para evitar colisiones cuando varios usuarios guardan predicciones a la vez, 
+  implementa una cola de reintentos automática con "Backoff aleatorio" (Jitter)
+  que resuelve conflictos de concurrencia de forma transparente.
+
+--------------------------------------------------------------------------------
+4. AUTOMATIZACIÓN DE RESULTADOS (worldcup26.ir)
+--------------------------------------------------------------------------------
+El archivo /src/worldcupScheduler.js automatiza la actualización de resultados
+utilizando la API externa de worldcup26.ir. Se programó una lógica inteligente de consumo:
+
+1. Sincronización Diaria:
+   - Se ejecuta una vez al día a las 00:05 UTC.
+   - Consulta a la API todos los partidos y asocia el ID de la API a nuestros partidos locales.
+
+2. Monitoreo en Tiempo Real (Poller):
+   - Se ejecuta periódicamente (ej. cada 10 o 15 minutos).
+   - Filtra los partidos que no estén finalizados en nuestra base de datos y que hayan comenzado hace más de 90 minutos.
+   - Aplica un cooldown de 4 minutos: Si ya consultamos un partido activo, no volveremos a consultar la API por ese mismo partido hasta que pasen 4 minutos.
+   - En cuanto la API responde que el partido finalizó (FT, AET o PEN), se guardan los goles definitivos en GitHub (o localmente), se marca el partido como finalizado y se detienen las consultas sobre ese partido.
+
+--------------------------------------------------------------------------------
+5. INTEGRACIÓN Y DESPLIEGUE EN VERCEL
+--------------------------------------------------------------------------------
+El proyecto cuenta con el archivo vercel.json que le indica a Vercel cómo montar
+el servidor Express.
+
+Variables de Entorno necesarias en Vercel (Environment Variables):
+- GITHUB_TOKEN: Token de acceso personal (clásico) generado en tu configuración 
+  de desarrollador en GitHub con permisos de "repo" habilitados.
+- GITHUB_REPO: Tu usuario y repositorio privado (ej: "mi-usuario/prode-mundial").
+- GITHUB_BRANCH: Rama del repositorio (generalmente "main").
+- CRON_SECRET: Una contraseña aleatoria inventada por ti (ej: "miclave123") para 
+  asegurar que solo tu programador pueda ejecutar la actualización de partidos.
+
+--------------------------------------------------------------------------------
+6. EL PROGRAMADOR DE TAREAS (CRON JOBS)
+--------------------------------------------------------------------------------
+Debido a que Vercel limita las cuentas Hobby (gratuitas) a un máximo de 1 cron 
+diario en su plataforma, dividimos las tareas automatizadas en dos sistemas:
+
+A. Tarea Diaria (Vercel Crons):
+   Configurada en vercel.json para correr a las 00:05 UTC. Llama internamente 
+   a la ruta "/api/cron/sync" para cargar los IDs de los partidos del día.
+
+B. Tarea de Monitoreo Frecuente (cron-job.org):
+   Dado que no podemos correr crons cada 10 minutos en Vercel gratis, usamos la 
+   web externa y gratuita cron-job.org:
+     - Crea un cron job que apunte a: "https://tu-app.vercel.app/api/cron/monitor"
+     - Frecuencia: Cada 10 o 15 minutos.
+     - Cabeceras (Headers): Añade una cabecera de petición:
+         * Key: Authorization
+         * Value: Bearer tu_clave_cron_secret (la misma que pusiste en CRON_SECRET)
+
+--------------------------------------------------------------------------------
+7. MANUAL DE ADMINISTRACIÓN Y SOPORTE
+--------------------------------------------------------------------------------
+Al no poseer una base de datos tradicional, puedes administrar tu aplicación 
+directamente editando los archivos CSV en GitHub (haciendo clic en el lápiz):
+
+A. Eliminar un usuario:
+   Borra la fila completa del usuario en "data/usuarios.csv". Opcionalmente,
+   borra sus filas correspondientes en "data/predicciones_partidos.csv".
+
+B. Forzar el cambio de contraseña a un usuario:
+   Las contraseñas se guardan hasheadas con SHA-256 para seguridad estricta.
+   Para asignarle una nueva clave temporal (ej: "123456"), edita el archivo
+   "data/usuarios.csv", busca la fila del usuario, borra su hash actual y pega
+   este hash exacto que equivale a "123456":
+   8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
+
+C. Forzar/Corregir un resultado manualmente:
+   Si por alguna razón la API falló o deseas ingresar un resultado a mano:
+   Edita "data/partidos.csv", busca el partido, introduce los goles locales,
+   los goles visitantes y cambia el valor "false" por "true" al final de la línea.
+   Al hacer guardar (commit), la aplicación recalculará los puntajes de todos
+   los usuarios de forma automática.
+================================================================================

@@ -1,0 +1,22 @@
+{
+  "name": "prode-mundial",
+  "version": "1.0.0",
+  "description": "Aplicación web completa para un Prode del Mundial para jugar entre amigos.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "test": "node src/test_engine.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "axios": "^1.7.2",
+    "express": "^4.19.2",
+    "node-cron": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Antigravity",
+  "license": "ISC"
+}

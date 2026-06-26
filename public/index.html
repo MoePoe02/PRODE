@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Prode Mundial 2026 - Amigos</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="FAVICON.ico">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+    rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- HammerJS for Chart.js Zoom -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+  <!-- Chart.js Zoom Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css?v=3.2">
+</head>
+
+<body>
+  <div class="app-container">
+
+    <!-- Navbar Superior (Desktop) -->
+    <header class="main-header">
+      <div class="logo">
+        <img src="FAVICON.ico" alt="Logo" class="logo-emoji"
+          style="width: 1.8rem; height: 1.8rem; object-fit: contain;">
+        <h1>PRODE<span>2026</span></h1>
+      </div>
+      <nav class="main-nav" id="main-nav">
+        <!-- Generado dinámicamente -->
+      </nav>
+      <div class="user-status-widget" id="user-status-widget">
+        <!-- Estado del usuario / botón de login -->
+      </div>
+    </header>
+
+    <!-- Notificaciones flotantes -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Contenido Principal (Vistas del SPA) -->
+    <main class="main-content">
+
+      <!-- ================= VISTA LOGIN/REGISTRO ================= -->
+      <section id="view-auth" class="tab-view active">
+        <div class="auth-card">
+          <!-- Formulario Login -->
+          <form id="form-login" class="auth-form active">
+            <h2>¡Hola de nuevo!</h2>
+            <p class="subtitle">Ingresa tus datos para continuar pronosticando.</p>
+            <div class="input-group">
+              <label for="login-username"><i class="fa-solid fa-user"></i> Nombre de Usuario</label>
+              <input type="text" id="login-username" placeholder="Ej. martin_99" required autocomplete="username">
+            </div>
+            <div class="input-group">
+              <label for="login-password"><i class="fa-solid fa-lock"></i> Contraseña</label>
+              <input type="password" id="login-password" placeholder="••••••••" required
+                autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-primary">Entrar al Prode <i
+                class="fa-solid fa-right-to-bracket"></i></button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ================= VISTA HOME (PANEL DE JUEGO) ================= -->
+      <section id="view-home" class="tab-view">
+        <div class="home-layout">
+
+          <!-- Columna Izquierda: Partidos y Predicciones -->
+          <div class="left-column">
+
+            <!-- Sección Predicción Especial Top 3 (Con dropdowns) -->
+            <div class="top3-box" id="top3-box">
+              <div class="top3-header" id="top3-toggle-header" style="cursor: pointer; user-select: none;">
+                <h3><i class="fa-solid fa-trophy text-gold"></i> Pronóstico Podio del Mundial</h3>
+                <div class="top3-header-right" style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span class="badge-status" id="top3-lock-status">Cargando...</span>
+                  <span class="top3-chevron"><i class="fa-solid fa-chevron-up"></i></span>
+                </div>
+              </div>
+              <p class="top3-info">Predice el 1°, 2° y 3° puesto antes del final de fase de grupos para ganar hasta +15
+                puntos extras.</p>
+
+              <div class="top3-body-collapsible">
+                <div class="top3-inputs">
+                  <div class="top3-podio-input">
+                    <span class="podio-num rank-1">1°</span>
+                    <select id="top3-p1" class="top3-input-field select-pais">
+                      <option value="">Cargando países...</option>
+                    </select>
+                  </div>
+                  <div class="top3-podio-input">
+                    <span class="podio-num rank-2">2°</span>
+                    <select id="top3-p2" class="top3-input-field select-pais">
+                      <option value="">Cargando países...</option>
+                    </select>
+                  </div>
+                  <div class="top3-podio-input">
+                    <span class="podio-num rank-3">3°</span>
+                    <select id="top3-p3" class="top3-input-field select-pais">
+                      <option value="">Cargando países...</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn-gold" id="btn-save-top3">Guardar Podio <i class="fa-solid fa-save"></i></button>
+              </div>
+            </div>
+
+            <!-- Alternador de Fase (Grupos / Llaves) -->
+            <div class="phase-toggle-bar">
+              <button class="phase-toggle-btn active" id="btn-toggle-groups"><i class="fa-solid fa-table-cells"></i>
+                Fase de Grupos</button>
+              <button class="phase-toggle-btn" id="btn-toggle-bracket"><i class="fa-solid fa-sitemap"></i> Llaves de
+                Eliminación</button>
+            </div>
+
+            <!-- Contenedor Fase de Grupos -->
+            <div id="groups-container">
+              <div class="section-title-container">
+                <h2>Partidos de Grupo</h2>
+                <div class="filters">
+                  <button class="filter-btn active" data-filter="todos">Todos</button>
+                  <button class="filter-btn" data-filter="predecibles">Habilitados</button>
+                  <button class="filter-btn" data-filter="finalizados">Finalizados</button>
+                </div>
+              </div>
+
+              <!-- Barra de ordenación -->
+              <div class="sort-bar">
+                <span class="sort-label"><i class="fa-solid fa-sort"></i> Ordenar por:</span>
+                <div class="sort-options">
+                  <button class="sort-btn active" id="btn-sort-fecha" data-sort="fecha"><i
+                      class="fa-solid fa-calendar-days"></i> Fecha</button>
+                  <button class="sort-btn" id="btn-sort-grupo" data-sort="grupo"><i class="fa-solid fa-layer-group"></i>
+                    Grupo</button>
+                </div>
+              </div>
+
+              <!-- Controles de Acordeones -->
+              <div class="accordion-controls">
+                <button id="btn-go-to-today" class="btn-toggle-all">
+                  <i class="fa-solid fa-calendar-day"></i>&nbsp;Hoy
+                </button>
+                <button id="btn-randomize-all-home" class="btn-randomize-all"
+                  title="Randomizar todas las predicciones habilitadas">
+                  <i class="fa-solid fa-dice"></i> Randomizar
+                </button>
+                <button id="btn-toggle-accordions-home" class="btn-toggle-all">
+                  <i class="fa-solid fa-angles-down"></i> Expandir Todos
+                </button>
+              </div>
+
+              <div class="partidos-list" id="lista-partidos">
+                <!-- Cargado dinámicamente -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Columna Derecha: Miniscoreboard -->
+          <div class="right-column">
+            <div class="mini-scoreboard-card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-ranking-star"></i> Posiciones de Amigos</h3>
+                <button class="btn-text" id="btn-go-scoreboard">Ver todo <i
+                    class="fa-solid fa-arrow-right"></i></button>
+              </div>
+              <div class="mini-table-container">
+                <table class="mini-scoreboard-table">
+                  <thead>
+                    <tr>
+                      <th class="col-pos">Pos</th>
+                      <th class="col-user">Jugador</th>
+                      <th class="col-pts text-right">Pts</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mini-scoreboard-body">
+                    <!-- Cargado dinámicamente -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Chat Llorería (Desktop: dentro de la columna derecha, debajo del mini scoreboard) -->
+            <div class="chat-widget-desktop" id="chat-widget-desktop" style="position: relative;">
+              <div class="chat-widget-header">
+                <h3><i class="fa-solid fa-comments"></i> La Llorería</h3>
+                <span class="chat-activos-badge"><i class="fa-solid fa-circle"
+                    style="color:#22c55e;font-size:0.6rem;"></i> <span id="chat-activos-count-desktop">0</span>
+                  activos</span>
+              </div>
+              <div class="chat-wall-container">
+                <div class="chat-messages-wall" id="chat-messages-desktop">
+                  <!-- Mensajes cargados dinámicamente -->
+                </div>
+                <!-- Floating pill for new messages (Desktop) -->
+                <div class="chat-new-messages-pill" id="pill-new-messages-desktop">
+                  <i class="fa-solid fa-arrow-down"></i> Nuevos mensajes
+                </div>
+              </div>
+              <div class="chat-escribiendo" id="chat-escribiendo-desktop" style="display:none;"></div>
+              <div class="chat-form-wrap">
+                <div class="chat-reply-preview-container" id="chat-reply-preview-desktop" style="display:none;">
+                  <div class="reply-content">
+                    <span class="reply-user" id="reply-user-desktop"></span>
+                    <span class="reply-text" id="reply-text-desktop"></span>
+                  </div>
+                  <button type="button" class="btn-cancel-reply" onclick="chatCancelarRespuesta()"><i
+                      class="fa-solid fa-xmark"></i></button>
+                </div>
+                <form class="chat-input-form" id="chat-form-desktop" autocomplete="off">
+                  <input type="text" id="chat-input-desktop" class="chat-input" placeholder="Escribí algo..."
+                    maxlength="500">
+                  <button type="submit" class="btn-chat-send" id="chat-send-desktop"><i
+                      class="fa-solid fa-paper-plane"></i></button>
+                </form>
+                <div class="chat-spam-overlay" id="chat-spam-desktop" style="display:none;">
+                  <i class="fa-solid fa-ban"></i> Anti-spam: esperá <span id="chat-spam-count-desktop">15</span>s
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Contenedor Fase de Eliminación Directa (Bracket) -->
+          <div id="bracket-container" style="display: none;">
+            <div class="section-title-container">
+              <h2>Llaves del Torneo</h2>
+              <div class="privacy-note"><i class="fa-solid fa-circle-info"></i> Desliza horizontalmente para ver las
+                fases.</div>
+            </div>
+            <div class="bracket-outer" id="bracket-outer">
+              <div class="bracket-scroll">
+                <div class="bracket-tree" id="bracket-tree">
+                  <!-- Árbol de llaves renderizado dinámicamente -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= VISTA SCOREBOARD COMPLETA ================= -->
+      <section id="view-scoreboard" class="tab-view">
+        <div class="scoreboard-layout">
+
+          <!-- Tabla de Posiciones Completa (Flippable Card) -->
+          <div class="scoreboard-main-card-container" id="scoreboard-main-card-container">
+            <div class="scoreboard-main-card-inner">
+
+              <!-- Frente: Tabla de Posiciones -->
+              <div class="scoreboard-main-card-front scoreboard-main-card">
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; width: 100%;">
+                  <div style="display: flex; flex-direction: column; gap: 0.2rem; align-items: flex-start;">
+                    <h2 style="margin: 0; font-size: 1.25rem;">Tabla de Posiciones</h2>
+                    <span style="font-size: 0.75rem; color: var(--text-sub); font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em;">PUNTOS Y RACHA DE CADA JUGADOR</span>
+                  </div>
+                  <button class="btn-audit-toggle" id="btn-show-scoreboard-audit"
+                    style="margin-top: 0; align-self: center;">
+                    <i class="fa-solid fa-chart-simple"></i> Desplegar auditoria
+                  </button>
+                </div>
+                <div class="full-table-container">
+                  <table class="scoreboard-table">
+                    <thead>
+                      <tr>
+                        <th>Pos</th>
+                        <th>Jugador</th>
+                        <th>RACHA</th>
+                        <th>PUNTOS</th>
+                      </tr>
+                    </thead>
+                    <tbody id="full-scoreboard-body">
+                      <!-- Cargado dinámicamente -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Reverso: Auditoria de Predicciones -->
+              <div class="scoreboard-main-card-back scoreboard-main-card">
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; width: 100%;">
+                  <div style="display: flex; flex-direction: column; gap: 0.2rem; align-items: flex-start;">
+                    <h2 style="margin: 0; font-size: 1.25rem;">Auditoría de Predicciones</h2>
+                    <span id="audit-match-subtitle"
+                      style="font-size: 0.75rem; color: var(--text-sub); font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em;">Cargando
+                      partido...</span>
+                  </div>
+                  <button id="btn-close-scoreboard-audit" title="Volver a Tabla de Posiciones"
+                    style="margin-top: 0; align-self: center;">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                  </button>
+                </div>
+                <div class="full-table-container">
+                  <table class="scoreboard-table audit-table" style="width: 100%;">
+                    <thead>
+                      <tr>
+                        <th>Pos</th>
+                        <th>Jugador</th>
+                        <th style="text-align: center;">PRED.</th>
+                        <th style="text-align: center;">PTS</th>
+                      </tr>
+                    </thead>
+                    <tbody id="scoreboard-audit-body">
+                      <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-sub); padding: 2rem;">Cargando
+                          auditoría...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Columna Derecha (Gráficos y Pálpitos) -->
+          <div class="scoreboard-right-column" style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Gráfica de Evolución -->
+            <div class="scoreboard-chart-card">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                  <h2 id="chart-card-title" style="margin: 0;">Gráfico de Evolución</h2>
+                  <p id="chart-card-subtitle" class="chart-subtitle" style="margin: 0.25rem 0 0;">Mira el avance acumulado de cada jugador a lo largo del torneo.</p>
+                </div>
+                <div class="chart-zoom-controls" style="display: flex; gap: 0.5rem; align-self: center;">
+                  <button id="btn-zoom-in" class="btn-zoom-ctrl" title="Acercar"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                  <button id="btn-zoom-out" class="btn-zoom-ctrl" title="Alejar"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                  <button id="btn-reset-zoom" class="btn-zoom-ctrl" style="display: none;" title="Restablecer Zoom"><i class="fa-solid fa-arrows-rotate"></i></button>
+                </div>
+              </div>
+              <div class="chart-container">
+                <canvas id="evolutionChart" style="touch-action: none;"></canvas>
+              </div>
+              <div class="chart-legend-carousel-wrapper"
+                style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 1rem; width: 100%;">
+                <button id="btn-chart-prev" class="btn-chart-nav" title="Gráfico anterior"><i
+                    class="fa-solid fa-chevron-left"></i></button>
+                <div id="chart-legend" class="chart-legend-html" style="flex: 1; margin: 0;"></div>
+                <button id="btn-chart-next" class="btn-chart-nav" title="Siguiente gráfico"><i
+                    class="fa-solid fa-chevron-right"></i></button>
+              </div>
+            </div>
+
+            <!-- Pálpitos en Vivo -->
+            <div class="scoreboard-palpitos-card" id="scoreboard-palpitos-card" style="display: none;">
+              <h2><i class="fa-solid fa-fire" style="color: #fbbf24; margin-right: 0.5rem;"></i> Pálpitos en Vivo</h2>
+              <p class="chart-subtitle">Distribución de las predicciones de los usuarios para los partidos de hoy en
+                juego.</p>
+              <div id="scoreboard-palpitos-list" class="scoreboard-palpitos-list">
+                <!-- Cargado dinámicamente -->
+              </div>
+            </div>
+          </div>
+
+
+
+        </div>
+      </section>
+
+      <!-- ================= VISTA PERFIL DE USUARIO ================= -->
+      <section id="view-profile" class="tab-view">
+        <div class="profile-layout">
+          <!-- Info de Perfil -->
+          <div class="profile-header-card">
+            <!-- Wrapper del avatar con botón de edición -->
+            <div class="profile-avatar-wrapper">
+              <div class="profile-avatar-large" id="profile-avatar" title="Cambiar Avatar">⚽</div>
+              <button id="btn-edit-avatar" class="btn-edit-avatar-icon" style="display: none;" title="Cambiar Avatar">
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+            </div>
+            <div class="profile-info">
+              <div class="profile-name-row" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <h2 id="profile-username">Usuario</h2>
+                <button id="btn-edit-username" class="btn-edit-username" style="display: none;"
+                  title="Cambiar Nombre de Usuario">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+              </div>
+              <p class="profile-stats">
+                <span class="stat-badge"><i class="fa-solid fa-star"></i> Puntos Totales: <strong
+                    id="profile-points">0</strong></span>
+              </p>
+            </div>
+            <!-- Botones de Acción en Perfil (solo visible si es mi propio perfil) -->
+            <div class="profile-actions-wrapper"
+              style="display: flex; gap: 0.5rem; margin-left: auto; align-self: center;">
+              <button id="profile-password-btn" class="btn-password-profile" style="display: none;">
+                <i class="fa-solid fa-key"></i> Cambiar Clave
+              </button>
+              <button id="profile-logout-btn" class="btn-logout-profile" style="display: none;"
+                onclick="cerrarSesion()">
+                <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+              </button>
+            </div>
+          </div>
+
+          <!-- Predicciones del Usuario -->
+          <div class="profile-predictions-container">
+            <!-- Pestañas Switcher -->
+            <div class="profile-switch-wrapper" style="display: flex; justify-content: center; margin-bottom: 2rem;">
+              <div class="profile-switch-container">
+                <button class="profile-switch-btn active" id="btn-profile-tab-stats" onclick="toggleProfileViewTab('stats')">
+                  <i class="fa-solid fa-chart-simple" style="margin-right: 0.4rem;"></i> Estadísticas
+                </button>
+                <button class="profile-switch-btn" id="btn-profile-tab-history"
+                  onclick="toggleProfileViewTab('history')">
+                  <i class="fa-solid fa-list-check" style="margin-right: 0.4rem;"></i> Historial
+                </button>
+              </div>
+            </div>
+
+            <!-- Contenido Pestaña: Historial -->
+            <div id="profile-content-history" style="display: none;">
+              <div class="profile-predictions-header">
+                <h2>Historial de Predicciones</h2>
+                <div class="privacy-note">
+                  <i class="fa-solid fa-circle-info"></i> Las predicciones de partidos no empezados se muestran
+                  bloqueadas
+                  (🔒) para evitar copias.
+                </div>
+              </div>
+
+              <!-- Podio Predicho por este usuario -->
+              <div class="profile-top3-card">
+                <h3>Podio Predicho</h3>
+                <div class="profile-top3-display" id="profile-top3-display">
+                  <!-- Cargado dinámicamente -->
+                </div>
+              </div>
+
+              <!-- Tablas de predicciones -->
+              <div id="profile-partidos-list">
+                <!-- Cargado dinámicamente -->
+              </div>
+            </div>
+
+            <!-- Contenido Pestaña: Estadísticas -->
+            <div id="profile-content-stats">
+              <!-- Se cargan dinámicamente las tarjetas y el gráfico de radar -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= VISTA LLORERÍA (CHAT MOBILE) ================= -->
+      <section id="view-chat" class="tab-view">
+        <div class="chat-layout-mobile" style="position: relative;">
+          <div class="chat-widget-header">
+            <h2><i class="fa-solid fa-comments"></i> La Llorería</h2>
+            <span class="chat-activos-badge"><i class="fa-solid fa-circle" style="color:#22c55e;font-size:0.6rem;"></i>
+              <span id="chat-activos-count-mobile">0</span> activos</span>
+          </div>
+          <div class="chat-wall-container">
+            <div class="chat-messages-wall" id="chat-messages-mobile">
+              <!-- Mensajes cargados dinámicamente -->
+            </div>
+            <!-- Floating pill for new messages (Mobile) -->
+            <div class="chat-new-messages-pill" id="pill-new-messages-mobile">
+              <i class="fa-solid fa-arrow-down"></i> Nuevos mensajes
+            </div>
+          </div>
+          <div class="chat-escribiendo" id="chat-escribiendo-mobile" style="display:none;"></div>
+          <div class="chat-form-wrap chat-form-wrap-mobile">
+            <div class="chat-reply-preview-container" id="chat-reply-preview-mobile" style="display:none;">
+              <div class="reply-content">
+                <span class="reply-user" id="reply-user-mobile"></span>
+                <span class="reply-text" id="reply-text-mobile"></span>
+              </div>
+              <button type="button" class="btn-cancel-reply" onclick="chatCancelarRespuesta()"><i
+                  class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="chat-input-form" id="chat-form-mobile" autocomplete="off">
+              <input type="text" id="chat-input-mobile" class="chat-input" placeholder="Escribí algo..."
+                maxlength="500">
+              <button type="submit" class="btn-chat-send" id="chat-send-mobile"><i
+                  class="fa-solid fa-paper-plane"></i></button>
+            </form>
+            <div class="chat-spam-overlay" id="chat-spam-mobile" style="display:none;">
+              <i class="fa-solid fa-ban"></i> Anti-spam: esperá <span id="chat-spam-count-mobile">15</span>s
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VISTA ADMINISTRADOR ================= -->
+      <section id="view-admin" class="tab-view">
+        <div class="admin-layout">
+          <h2>Panel de Administración (Prode)</h2>
+          <p class="subtitle">Actualiza los marcadores reales de los partidos y define el podio del Mundial para
+            calcular los puntajes.</p>
+
+          <div class="admin-grids" style="grid-template-columns: 1fr;">
+
+            <!-- Administrar Partidos y Resultados -->
+            <div class="admin-card" style="margin-bottom: 2rem;">
+              <h3><i class="fa-solid fa-square-poll-horizontal"
+                  style="margin-right: 0.5rem; color: var(--color-primary);"></i> Administrar Partidos y Resultados</h3>
+              <p class="card-desc">Modifica los partidos, cambia los equipos locales/visitantes de las llaves, ingresa
+                resultados reales y finaliza partidos.</p>
+
+              <form id="form-admin-partido" class="admin-form">
+                <div class="admin-form-row">
+                  <div class="input-group">
+                    <label for="admin-partido-id"><i class="fa-solid fa-gamepad"></i> Seleccionar Partido</label>
+                    <select id="admin-partido-id" required>
+                      <option value="new">-- Crear/Seleccionar Partido --</option>
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="admin-fase"><i class="fa-solid fa-circle-info"></i> Fase</label>
+                    <select id="admin-fase" required
+                      style="height: 38px; border-radius: 6px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-glass); padding: 0 0.5rem;">
+                      <option value="Fase de Grupos">Fase de Grupos</option>
+                      <option value="Dieciseisavos de Final">Dieciseisavos de Final</option>
+                      <option value="Octavos de Final">Octavos de Final</option>
+                      <option value="Cuartos de Final">Cuartos de Final</option>
+                      <option value="Semifinales">Semifinales</option>
+                      <option value="Tercer Puesto">Tercer Puesto</option>
+                      <option value="Gran Final">Gran Final</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="admin-form-row">
+                  <div class="input-group">
+                    <label for="admin-eq-local"><i class="fa-solid fa-flag"></i> Equipo Local</label>
+                    <select id="admin-eq-local" class="select-pais" required>
+                      <!-- Poblado dinámicamente -->
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="admin-eq-vis"><i class="fa-solid fa-flag"></i> Equipo Visitante</label>
+                    <select id="admin-eq-vis" class="select-pais" required>
+                      <!-- Poblado dinámicamente -->
+                    </select>
+                  </div>
+                </div>
+
+                <div class="admin-form-row">
+                  <div class="input-group">
+                    <label for="admin-fecha"><i class="fa-solid fa-calendar-days"></i> Fecha de Inicio</label>
+                    <input type="datetime-local" id="admin-fecha" required
+                      style="height: 38px; border-radius: 6px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-glass); padding: 0 0.5rem;">
+                  </div>
+                  <div class="input-group"
+                    style="flex-direction: row; gap: 1rem; align-items: center; justify-content: flex-start; margin-top: 1.5rem;">
+                    <label for="admin-finalizado"
+                      style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                      <input type="checkbox" id="admin-finalizado" style="width: 18px; height: 18px; cursor: pointer;">
+                      Partido Finalizado
+                    </label>
+                  </div>
+                </div>
+
+                <div class="admin-form-row">
+                  <div class="input-group">
+                    <label for="admin-goles-local"><i class="fa-solid fa-futbol"></i> Goles Local</label>
+                    <input type="number" id="admin-goles-local" min="0" placeholder="Ej. 2"
+                      style="height: 38px; border-radius: 6px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-glass); padding: 0 0.5rem;">
+                  </div>
+                  <div class="input-group">
+                    <label for="admin-goles-vis"><i class="fa-solid fa-futbol"></i> Goles Visitante</label>
+                    <input type="number" id="admin-goles-vis" min="0" placeholder="Ej. 1"
+                      style="height: 38px; border-radius: 6px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-glass); padding: 0 0.5rem;">
+                  </div>
+                </div>
+
+                <div class="admin-form-row" id="admin-ganador-real-row" style="display: none;">
+                  <div class="input-group">
+                    <label for="admin-ganador-real"><i class="fa-solid fa-trophy"></i> Ganador
+                      (Penales/Extra-tiempo)</label>
+                    <select id="admin-ganador-real"
+                      style="height: 38px; border-radius: 6px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-glass); padding: 0 0.5rem;">
+                      <option value="">-- Seleccionar Ganador --</option>
+                      <option value="local">Local</option>
+                      <option value="visitante">Visitante</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="margin-top: 1rem;">Guardar Partido/Resultado <i
+                    class="fa-solid fa-save"></i></button>
+              </form>
+            </div>
+
+            <!-- Administrar Podio Real Top 3 -->
+            <div class="admin-card" style="margin-bottom: 2rem;">
+              <h3><i class="fa-solid fa-trophy" style="margin-right: 0.5rem; color: #fbbf24;"></i> Administrar Podio
+                Real (Top 3)</h3>
+              <p class="card-desc">Establece las selecciones reales que ocuparon el 1°, 2° y 3° puesto una vez
+                finalizado el torneo para calcular los puntos extras de los usuarios.</p>
+
+              <form id="form-admin-top3" class="admin-form">
+                <div class="admin-form-row">
+                  <div class="input-group">
+                    <label for="admin-top3-p1"><i class="fa-solid fa-medal text-gold"></i> 1° Puesto (Campeón)</label>
+                    <select id="admin-top3-p1" class="select-pais top3-input-field" required>
+                      <!-- Poblado dinámicamente -->
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="admin-top3-p2"><i class="fa-solid fa-medal text-silver"></i> 2° Puesto</label>
+                    <select id="admin-top3-p2" class="select-pais top3-input-field" required>
+                      <!-- Poblado dinámicamente -->
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="admin-top3-p3"><i class="fa-solid fa-medal text-bronze"></i> 3° Puesto</label>
+                    <select id="admin-top3-p3" class="select-pais top3-input-field" required>
+                      <!-- Poblado dinámicamente -->
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn-gold" style="margin-top: 1rem;">Guardar Podio Real <i
+                    class="fa-solid fa-save"></i></button>
+              </form>
+            </div>
+
+            <!-- Configuración Global del Sistema -->
+            <div class="admin-card" style="margin-bottom: 2rem;">
+              <h3><i class="fa-solid fa-gear" style="margin-right: 0.5rem; color: var(--color-primary);"></i>
+                Configuración Global del Sistema</h3>
+              <p class="card-desc">Habilita modos especiales y configuraciones globales para toda la plataforma en
+                tiempo real.</p>
+
+              <div
+                style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                  <span
+                    style="font-weight: 600; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-flag text-gold" style="color: #fbbf24;"></i> Modo Argentina
+                  </span>
+                  <span style="font-size: 0.8rem; color: var(--text-sub); line-height: 1.4;">
+                    Activa la música nacional y cambia los colores del sitio a celeste y blanco con detalles dorados.
+                  </span>
+                </div>
+                <div style="flex-shrink: 0;">
+                  <label class="theme-switch">
+                    <input type="checkbox" id="switch-argentina-mode">
+                    <span class="theme-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+
+
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Botón Flotante "Guardar Todo" -->
+    <button id="btn-save-all" aria-label="Guardar todas las predicciones">
+      <i class="fa-solid fa-cloud-arrow-up"></i>
+      <span>Guardar Todo</span>
+      <span class="save-all-badge" id="save-all-count">0</span>
+    </button>
+
+    <!-- Barra de Navegación Inferior (Fija en Pantallas Móviles) -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+      <!-- Generado dinámicamente -->
+    </nav>
+
+    <!-- Volver Arriba -->
+    <div class="scroll-top-container">
+      <button id="btn-scroll-top" class="btn-scroll-top" aria-label="Volver arriba">
+        <i class="fa-solid fa-arrow-up"></i> Volver arriba
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+      <p>&copy; 2026 Prode del Mundial - Hecho entre amigos. Desarrollado con ⚡ y ⚽</p>
+    </footer>
+
+  </div>
+
+
+
+  <!-- Modal para Cambiar Avatar -->
+  <div id="modal-change-avatar" class="modal-overlay" style="display: none;">
+    <div class="modal-content-avatar">
+      <div class="modal-header-avatar">
+        <h3>Selecciona tu Nuevo Avatar</h3>
+        <button type="button" class="btn-close-modal-avatar" id="btn-close-avatar-modal"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="emoji-grid" id="profile-emoji-grid">
+        <!-- Emojis insertados dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Cambiar Nombre de Usuario -->
+  <div id="modal-change-username" class="modal-overlay" style="display: none;">
+    <div class="modal-content-username">
+      <div class="modal-header-avatar">
+        <h3>Cambiar Nombre de Usuario</h3>
+        <button type="button" class="btn-close-modal-avatar" id="btn-close-username-modal"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body-username" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
+        <!-- Paso 1: Ingresar nuevo nombre -->
+        <div id="username-step-input">
+          <div class="input-group" style="margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem;">
+            <label for="new-username-field"><i class="fa-solid fa-user-pen"></i> Nuevo Nombre</label>
+            <input type="text" id="new-username-field" class="chat-input" placeholder="Ej. martin_nuevo"
+              style="width: 100%; box-sizing: border-box;" required maxlength="30">
+          </div>
+          <button type="button" class="btn-primary" id="btn-submit-username-step1"
+            style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">Continuar <i
+              class="fa-solid fa-arrow-right"></i></button>
+        </div>
+
+        <!-- Paso 2: Advertencia y Confirmación -->
+        <div id="username-step-confirm" style="display: none;">
+          <div class="warning-box">
+            <h4>
+              <i class="fa-solid fa-triangle-exclamation"></i> ¡Atención!
+            </h4>
+            <p style="font-size: 0.88rem; line-height: 1.5; margin-bottom: 0.8rem; color: var(--text-main);">
+              Estás por cambiar tu nombre de usuario a: <strong id="confirm-new-username-span"
+                style="color: var(--color-primary);"></strong>
+            </p>
+            <p style="font-size: 0.85rem; line-height: 1.5; color: var(--text-sub); margin: 0;">
+              <i class="fa-solid fa-circle-info"></i> Importante: La próxima vez que inicies sesión, deberás usar este
+              nuevo nombre de usuario.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.75rem;">
+            <button type="button" class="btn-scroll-top" id="btn-back-username-step2"
+              style="flex: 1; justify-content: center; margin-top: 0; padding: 0.55rem 1rem;"><i
+                class="fa-solid fa-arrow-left"></i> Volver</button>
+            <button type="button" class="btn-primary" id="btn-confirm-username-change"
+              style="flex: 1; background-color: var(--color-primary); justify-content: center; display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 1rem;">Confirmar
+              <i class="fa-solid fa-check"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Cambiar Contraseña -->
+  <div id="modal-change-password" class="modal-overlay" style="display: none;">
+    <div class="modal-content-username">
+      <div class="modal-header-avatar">
+        <h3>Cambiar Contraseña</h3>
+        <button type="button" class="btn-close-modal-avatar" id="btn-close-password-modal"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="form-change-password" class="modal-body-username"
+        style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;" autocomplete="off">
+        <div id="change-pwd-error" class="form-error-box" style="display: none;"></div>
+        <div class="input-group" style="display: flex; flex-direction: column; gap: 0.4rem;">
+          <label for="change-pwd-current"><i class="fa-solid fa-lock"></i> Contraseña Actual</label>
+          <input type="password" id="change-pwd-current" class="chat-input" placeholder="••••••••"
+            style="width: 100%; box-sizing: border-box;" required autocomplete="current-password">
+        </div>
+        <div class="input-group" style="display: flex; flex-direction: column; gap: 0.4rem;">
+          <label for="change-pwd-new"><i class="fa-solid fa-key"></i> Nueva Contraseña</label>
+          <input type="password" id="change-pwd-new" class="chat-input" placeholder="Mínimo 4 caracteres"
+            style="width: 100%; box-sizing: border-box;" required autocomplete="new-password">
+        </div>
+        <div class="input-group" style="display: flex; flex-direction: column; gap: 0.4rem;">
+          <label for="change-pwd-confirm"><i class="fa-solid fa-shield-halved"></i> Confirmar Nueva Contraseña</label>
+          <input type="password" id="change-pwd-confirm" class="chat-input" placeholder="Repite tu nueva contraseña"
+            style="width: 100%; box-sizing: border-box;" required autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn-primary"
+          style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.5rem;">Guardar
+          Contraseña <i class="fa-solid fa-save"></i></button>
+      </form>
+    </div>
+  </div>
+  <!-- Modal para ver la fórmula de cálculo de puntos -->
+  <div id="modal-formula-puntos" class="modal-overlay" style="display: none;">
+    <div class="modal-content-avatar" style="max-width: 440px; width: 95%;">
+      <div class="modal-header-avatar">
+        <h3><i class="fa-solid fa-calculator"></i> Detalle de Puntos</h3>
+        <button type="button" class="btn-close-modal-avatar" id="btn-close-formula-modal"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modal-formula-body"
+        style="color: var(--text-main); font-size: 0.88rem; display: flex; flex-direction: column; gap: 0.8rem; max-height: 70vh; overflow-y: auto; padding-right: 0.2rem;">
+        <!-- Se rellena dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón flotante Día Actual (Mobile/Tablet) -->
+  <button id="btn-go-to-today-mobile" class="floating-today-pill" style="display: none;">
+    <i class="fa-solid fa-calendar-day"></i>&nbsp;Hoy
+  </button>
+
+  <!-- Botón flotante Info Reglas -->
+  <button id="btn-info-rules" class="btn-info-floating" style="display: none;" title="Ver Reglas de Puntos">
+    <i class="fa-solid fa-circle-info"></i>&nbsp;Info
+  </button>
+
+  <!-- Elementos de Modo Argentina -->
+  <audio id="audio-argentina" src="LATYLAM.mp3" loop preload="auto"></audio>
+  <button id="btn-argentina-mute" class="btn-argentina-mute" style="display: none;" title="Silenciar / Activar sonido"
+    aria-label="Silenciar o activar sonido de fondo">
+    <i class="fa-solid fa-volume-high"></i>
+  </button>
+
+  <!-- Modal de Reglas de Puntos -->
+  <div id="modal-reglas-puntos" class="modal-overlay" style="display: none;">
+    <div class="modal-content-avatar" style="max-width: 480px; width: 95%;">
+      <div class="modal-header-avatar">
+        <h3><i class="fa-solid fa-circle-question"></i> Reglas de Puntuación</h3>
+        <button type="button" class="btn-close-modal-avatar" id="btn-close-reglas-modal"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body-reglas"
+        style="color: var(--text-main); font-size: 0.88rem; display: flex; flex-direction: column; gap: 1rem; max-height: 70vh; overflow-y: auto; padding-right: 0.4rem; padding-top: 0.5rem;">
+
+        <!-- Sección 1: Fase de Grupos -->
+        <div
+          style="padding: 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+          <h4
+            style="color: var(--color-primary); font-size: 0.95rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+            <i class="fa-solid fa-table-cells"></i> Fase de Grupos
+          </h4>
+          <ul style="padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem; list-style-type: disc;">
+            <li><strong>Acierto de Tendencia:</strong> +2 puntos por acertar el ganador o si el partido finaliza
+              empatado.</li>
+            <li><strong>Goles Local:</strong> Se compara tu predicción con el resultado real. Se otorga: Goles reales
+              del Local menos el desvío cometido. Si predijiste arco en cero (0 goles) y se cumple, recibes +1 punto.
+            </li>
+            <li><strong>Goles Visitante:</strong> Se calcula de igual forma para el visitante: Goles reales menos el
+              desvío, o +1 si acertaste el arco en cero (0 goles).</li>
+            <li><strong>Bonus Pleno Total:</strong> +2 puntos si acertaste exactamente el marcador de ambos equipos.
+            </li>
+            <li
+              style="color: var(--text-sub); font-size: 0.78rem; list-style-type: none; margin-top: 0.2rem; line-height: 1.25;">
+              <em>Nota: Los puntos de goles y pleno se suman únicamente si acertaste la tendencia.</em>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Sección 2: Fase de Eliminación -->
+        <div
+          style="padding: 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+          <h4
+            style="color: var(--color-gold); font-size: 0.95rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+            <i class="fa-solid fa-sitemap"></i> Fase de Eliminación (Mata-Mata)
+          </h4>
+          <p style="margin-bottom: 0.4rem; font-size: 0.78rem; color: var(--text-sub); line-height: 1.25;">
+            Los goles durante los 120 minutos determinan los desvíos y el pleno, pero la tendencia se define por qué
+            equipo clasifica (incluso en penales).
+          </p>
+          <ul style="padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem; list-style-type: disc;">
+            <li><strong>Acierto de Tendencia:</strong>
+              <ul
+                style="padding-left: 1rem; list-style-type: circle; margin-top: 0.2rem; display: flex; flex-direction: column; gap: 0.2rem;">
+                <li><strong>Victoria Directa:</strong> +2 puntos si predijiste victoria en tiempo dze juego (goles
+                  desiguales) y tu equipo gana antes de llegar a los penales.</li>
+                <li><strong>Resolución por Penales (Pleno):</strong> +3 puntos si predijiste empate (se iba a penales) y
+                  elegiste al equipo que clasifica correcto.</li>
+                <li><strong>Resolución por Penales (Solo empate):</strong> +2 puntos si predijiste empate (se iba a
+                  penales) pero clasificó el otro equipo.</li>
+                <li><strong>Resolución por Penales (Solo clasificado):</strong> +1 punto si predijiste victoria directa
+                  pero el partido fue a penales y clasificó tu equipo.</li>
+              </ul>
+            </li>
+            <li><strong>Goles (Local y Visitante):</strong> Se calculan con base en los 120 minutos (goles reales menos
+              desvío, o +1 por arco en cero) y requiere haber acertado el clasificado.</li>
+            <li><strong>Bonus Pleno Total:</strong> +2 puntos si acertaste el marcador exacto de los 120 minutos,
+              requiriendo además haber acertado el ganador clasificado.</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- JS Logic -->
+  <script src="js/app.js?v=1.9"></script>
+</body>
+
+</html>
