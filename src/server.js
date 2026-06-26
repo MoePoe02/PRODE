@@ -874,13 +874,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || 'Error interno del servidor.' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor de Prode corriendo en http://localhost:${PORT}`);
-  console.log(`Modo de persistencia: ⚡ Supabase Database`);
-
-  if (!process.env.VERCEL) {
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor de Prode corriendo en http://localhost:${PORT}`);
+    console.log(`Modo de persistencia: ⚡ Supabase Database`);
     inicializarPlanificador();
-  }
-});
+  });
+}
 
 module.exports = app;
